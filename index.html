@@ -1,0 +1,59 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub OAuth Example</title>
+</head>
+<body>
+  <button onclick="authorizeWithGitHub()">Continue with GitHub</button>
+  <div id="userInfo"></div>
+
+  <script>
+    function authorizeWithGitHub() {
+      window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23liO3TsEBmcKZqJbj&redirect_uri=YOUR_REDIRECT_URI&scope=user`;
+    }
+
+    async function fetchGitHubData(accessToken) {
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      const userData = await response.json();
+      return userData;
+    }
+
+    async function handleGitHubAuth() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+
+      const response = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: 'Ov23liO3TsEBmcKZqJbj',
+          client_secret: 'YOUR_CLIENT_SECRET',
+          code: code
+        })
+      });
+
+      const data = await response.json();
+      const accessToken = data.access_token;
+      const userData = await fetchGitHubData(accessToken);
+
+      document.getElementById('userInfo').innerHTML = `
+        <h2>Welcome, ${userData.login}!</h2>
+        <img src="${userData.avatar_url}" alt="GitHub Avatar">
+      `;
+    }
+
+    if (window.location.search.includes('code')) {
+      handleGitHubAuth();
+    }
+  </script>
+</body>
+</html>
